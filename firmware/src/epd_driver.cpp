@@ -1,7 +1,7 @@
 #include "epd_driver.h"
 #include "config.h"
 
-#if defined(EPD_PANEL_42_SSD1683_BW) || defined(EPD_PANEL_42_DKE_RY683) || defined(EPD_PANEL_42_GDEM042F52)
+#if defined(EPD_PANEL_42_SSD1683_BW) || defined(EPD_PANEL_42_DKE_RY683) || defined(EPD_PANEL_42_GDEM042F52) || defined(EPD_PANEL_38_JD79665_BWRY)
 
 // ── Software SPI (bit-bang) for 4.2" panels ──
 // Avoids Busy Timeout on ESP32-C3 with non-default pins; no GxEPD2 dependency.
@@ -90,6 +90,32 @@ static void epdSetFullWindow() {
     epdSendCommand(0x4F);  // Set RAM Y address counter
     epdSendData(0x00);
     epdSendData(0x00);
+}
+
+static void epdSendResolution() {
+    epdSendCommand(0x61);
+    epdSendData((W >> 8) & 0xFF);
+    epdSendData(W & 0xFF);
+    epdSendData((H >> 8) & 0xFF);
+    epdSendData(H & 0xFF);
+}
+
+static void epdSetJd796xxFullWindow() {
+    uint16_t x0 = 0;
+    uint16_t x1 = (uint16_t)(W - 1);
+    uint16_t y0 = 0;
+    uint16_t y1 = (uint16_t)(H - 1);
+
+    epdSendCommand(0x83);
+    epdSendData((x0 >> 8) & 0xFF);
+    epdSendData(x0 & 0xFF);
+    epdSendData((x1 >> 8) & 0xFF);
+    epdSendData(x1 & 0xFF);
+    epdSendData((y0 >> 8) & 0xFF);
+    epdSendData(y0 & 0xFF);
+    epdSendData((y1 >> 8) & 0xFF);
+    epdSendData(y1 & 0xFF);
+    epdSendData(0x01);
 }
 
 // ── GPIO initialization ─────────────────────────────────────
@@ -202,6 +228,149 @@ void epdInit() {
     epdSendCommand(0xE9);
     epdSendData(0x01);
 
+    epdSendCommand(0x04);
+    epdWaitBusy();
+#elif defined(EPD_PANEL_38_JD79665_BWRY)
+    epdReset();
+    Serial.printf("[EPD-init] JD79665 768x552 BUSY=%d\n", digitalRead(PIN_EPD_BUSY));
+    epdWaitBusy();
+    delay(30);
+
+    epdSendCommand(0xAA);
+    epdSendData(0x49);
+    epdSendData(0x55);
+    epdSendData(0x20);
+    epdSendData(0x08);
+    epdSendData(0x09);
+    epdSendData(0x18);
+
+    epdSendCommand(0x01);
+    epdSendData(0x3F);
+
+    epdSendCommand(0x00);
+    epdSendData(0x4B);
+    epdSendData(0x69);
+
+    epdSendCommand(0x05);
+    epdSendData(0x40);
+    epdSendData(0x1F);
+    epdSendData(0x1F);
+    epdSendData(0x2C);
+
+    epdSendCommand(0x08);
+    epdSendData(0x6F);
+    epdSendData(0x1F);
+    epdSendData(0x1F);
+    epdSendData(0x22);
+
+    epdSendCommand(0x06);
+    epdSendData(0x6F);
+    epdSendData(0x1F);
+    epdSendData(0x14);
+    epdSendData(0x14);
+
+    epdSendCommand(0x03);
+    epdSendData(0x00);
+    epdSendData(0x54);
+    epdSendData(0x00);
+    epdSendData(0x44);
+
+    epdSendCommand(0x60);
+    epdSendData(0x02);
+    epdSendData(0x00);
+
+    epdSendCommand(0x30);
+    epdSendData(0x08);
+
+    epdSendCommand(0x50);
+    epdSendData(0x3F);
+
+    epdSendResolution();
+
+    epdSendCommand(0x65);
+    epdSendData(0x10);
+    epdSendData(0x00);
+    epdSendData(0x20);
+    epdSendData(0x00);
+
+    epdSendCommand(0xE3);
+    epdSendData(0x2F);
+
+    epdSendCommand(0x84);
+    epdSendData(0x01);
+
+    epdSetJd796xxFullWindow();
+    epdSendCommand(0x04);
+    epdWaitBusy();
+#elif defined(EPD_PANEL_75_JDY79668)
+    epdReset();
+    epdWaitBusy();
+    delay(30);
+
+    epdSendCommand(0xAA);
+    epdSendData(0x49);
+    epdSendData(0x55);
+    epdSendData(0x20);
+    epdSendData(0x08);
+    epdSendData(0x09);
+    epdSendData(0x18);
+
+    epdSendCommand(0x01);
+    epdSendData(0x3F);
+
+    epdSendCommand(0x00);
+    epdSendData(0x4B);
+    epdSendData(0x69);
+
+    epdSendCommand(0x05);
+    epdSendData(0x40);
+    epdSendData(0x1F);
+    epdSendData(0x1F);
+    epdSendData(0x2C);
+
+    epdSendCommand(0x08);
+    epdSendData(0x6F);
+    epdSendData(0x1F);
+    epdSendData(0x1F);
+    epdSendData(0x22);
+
+    epdSendCommand(0x06);
+    epdSendData(0x6F);
+    epdSendData(0x1F);
+    epdSendData(0x14);
+    epdSendData(0x14);
+
+    epdSendCommand(0x03);
+    epdSendData(0x00);
+    epdSendData(0x54);
+    epdSendData(0x00);
+    epdSendData(0x44);
+
+    epdSendCommand(0x60);
+    epdSendData(0x02);
+    epdSendData(0x00);
+
+    epdSendCommand(0x30);
+    epdSendData(0x08);
+
+    epdSendCommand(0x50);
+    epdSendData(0x3F);
+
+    epdSendResolution();
+
+    epdSendCommand(0x65);
+    epdSendData(0x10);
+    epdSendData(0x00);
+    epdSendData(0x20);
+    epdSendData(0x00);
+
+    epdSendCommand(0xE3);
+    epdSendData(0x2F);
+
+    epdSendCommand(0x84);
+    epdSendData(0x01);
+
+    epdSetJd796xxFullWindow();
     epdSendCommand(0x04);
     epdWaitBusy();
 #else
@@ -622,7 +791,7 @@ void epdPartialDisplayWithOld(uint8_t *data, const uint8_t *oldData, int xStart,
 // ── EPD sleep ───────────────────────────────────────────────
 
 void epdSleep() {
-#if defined(EPD_PANEL_42_DKE_RY683) || defined(EPD_PANEL_42_GDEM042F52)
+#if defined(EPD_PANEL_42_DKE_RY683) || defined(EPD_PANEL_42_GDEM042F52) || defined(EPD_PANEL_38_JD79665_BWRY) || defined(EPD_PANEL_75_JDY79668)
     epdSendCommand(0x07);
     epdSendData(0xA5);
     delay(200);
